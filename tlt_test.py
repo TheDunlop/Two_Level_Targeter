@@ -134,12 +134,11 @@ if __name__ == "__main__":
             )).T
         print('b:', B) 
         DX = np.matmul(-np.linalg.inv(B),rho1-pd)# rho1-pd*0)
-        state_guess[3:] += DX*.07 
+        state_guess[3:] += DX 
         print(f'DX: {DX}')
         p1 = propogate(state_guess, 0, dt, tf)
         
-        plot_trajectory(p1*lstar)
-        
+        plot_trajectory(p1*lstar) 
         print(f'p1:: {p1[-1][:3]}, pd: {pd}')
         
         residual = np.linalg.norm( p1[-1][:3]- pd) * lstar 

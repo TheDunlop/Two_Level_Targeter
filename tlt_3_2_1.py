@@ -148,7 +148,7 @@ if __name__ == "__main__":
     tf = 4.3425 * 24 * 60 * 60/tstar #4.3425 days in seconds
     pd = np.array([-153760, 0, 0])/lstar #desired position
     
-    dt =10/tstar#.5 
+    dt =1.0/tstar#.5 
 
     #tolerance for answer
     epsilon = 3.844e-3 # km
@@ -191,8 +191,7 @@ if __name__ == "__main__":
         print(f'DX: {DX}')
         p1 = propogate(state_guess, 0, dt, tf)
          
-        plot_trajectory(p1*lstar) 
-        print(f'p1: {p1[-1][:3]}, pd: {pd}, dp: {rho1-pd}')
+        #plot_trajectory(p1*lstar) 
+        #print(f'p1: {p1[-1][:3]}, pd: {pd}, dp: {rho1-pd}')
         
         residual = np.linalg.norm( p1[-1][:3]- pd) * lstar 
-#        print('iteration',residual )

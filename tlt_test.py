@@ -148,7 +148,7 @@ if __name__ == "__main__":
     tf = 4.3425 * 24 * 60 * 60/tstar #4.3425 days in seconds
     pd = np.array([-153760, 0, 0])/lstar #desired position
     
-    dt =10/lstar#.5 
+    dt =10/tstar#.5 
 
     #tolerance for answer
     epsilon = 3.844e-3 # km
@@ -156,45 +156,43 @@ if __name__ == "__main__":
     X = np.array([v0]) #design vector
     
     state_guess = np.array([p0[0], p0[1], p0[2], v0[0], v0[1], v0[2]])
-    prop = propogate(state_guess, 0, dt, tf)
-    plot_trajectory(prop*lstar)
-    print(prop)
-    residual = np.linalg.norm(prop[-1][:3] - pd)* lstar 
+    p1 = propogate(state_guess, 0, dt, tf)
+    plot_trajectory(p1*lstar)
+    print(p1)
+    residual = np.linalg.norm(p1[-1][:3] - pd)* lstar 
     
 
-    print(f'p1:: {prop[-1][:3]}, pd: {pd}')
+    
+    #dp1/dv0
+    #first central
+    h= .00001 * tstar / lstar
+    b1 = ((propogate(state_guess + np.array([0,0,0,h, 0,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,h, 0,0]),0,dt,tf ))[-1] / (2*h))[:3]
+    b2 = ((propogate(state_guess + np.array([0,0,0,0, h,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, h,0]),0,dt,tf ))[-1] / (2*h))[:3]
+    b3 = ((propogate(state_guess + np.array([0,0,0,0, 0,h]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, 0,h]),0,dt,tf ))[-1] / (2*h))[:3]
+    
+    B = np.vstack((
+        b1,
+        b2,
+        b3
+        )).T 
+    
+    print(f'p1:: {p1[-1][:3]}, pd: {pd}')
     stm1 = stm(state_guess)
-    print('STM WORKED!', stm1)
     while residual > epsilon:
         print('residual', residual)
         rho1 = state_guess[:3]
         v_guess = state_guess[3:]
         print(f'v_guess: {v_guess}')
         
-        #compute jacobian using finite difference
-        h=.001* tstar / lstar
    
-        #dp1/dv0
-        '''
-        b1 = ((propogate(state_guess + np.array([0,0,0,h, 0,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,h, 0,0]),0,dt,tf ))[-1] / (2*h))[:3]
-        b2 = ((propogate(state_guess + np.array([0,0,0,0, h,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, h,0]),0,dt,tf ))[-1] / (2*h))[:3]
-        b3 = ((propogate(state_guess + np.array([0,0,0,0, 0,h]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, 0,h]),0,dt,tf ))[-1] / (2*h))[:3]
-
-        B = np.vstack((
-            b1,
-            b2,
-            b3
-            )).T
-        '''
-        B = stm(state_guess)[:3, 3:]
-        print('b:', B) 
-        DX = np.matmul(-np.linalg.inv(B),-rho1+pd)# rho1-pd*0)
+        
+        DX = np.matmul(-np.linalg.inv(B),(p1[-1][:3]-pd))# rho1-pd*0)
         state_guess[3:] += DX 
         print(f'DX: {DX}')
         p1 = propogate(state_guess, 0, dt, tf)
-        
+         
         plot_trajectory(p1*lstar) 
-        print(f'p1: {p1[-1][:3]}, pd: {pd}')
+        print(f'p1: {p1[-1][:3]}, pd: {pd}, dp: {rho1-pd}')
         
         residual = np.linalg.norm( p1[-1][:3]- pd) * lstar 
 #        print('iteration',residual )

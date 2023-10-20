@@ -148,7 +148,7 @@ if __name__ == "__main__":
     tf = 4.3425 * 24 * 60 * 60/tstar #4.3425 days in seconds
     pd = np.array([-153760, 0, 0])/lstar #desired position
     
-    dt =1.0/tstar#.5 
+    dt =10.0/tstar#.5 
 
     #tolerance for answer
     epsilon = 3.844e-3 # km
@@ -166,15 +166,6 @@ if __name__ == "__main__":
     #dp1/dv0
     #first central
     h= .00001 * tstar / lstar
-    b1 = ((propogate(state_guess + np.array([0,0,0,h, 0,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,h, 0,0]),0,dt,tf ))[-1] / (2*h))[:3]
-    b2 = ((propogate(state_guess + np.array([0,0,0,0, h,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, h,0]),0,dt,tf ))[-1] / (2*h))[:3]
-    b3 = ((propogate(state_guess + np.array([0,0,0,0, 0,h]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, 0,h]),0,dt,tf ))[-1] / (2*h))[:3]
-    
-    B = np.vstack((
-        b1,
-        b2,
-        b3
-        )).T 
     
     print(f'p1:: {p1[-1][:3]}, pd: {pd}')
     stm1 = stm(state_guess)
@@ -184,6 +175,15 @@ if __name__ == "__main__":
         v_guess = state_guess[3:]
         print(f'v_guess: {v_guess}')
         
+        b1 = ((propogate(state_guess + np.array([0,0,0,h, 0,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,h, 0,0]),0,dt,tf ))[-1] / (2*h))[:3]
+        b2 = ((propogate(state_guess + np.array([0,0,0,0, h,0]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, h,0]),0,dt,tf ))[-1] / (2*h))[:3]
+        b3 = ((propogate(state_guess + np.array([0,0,0,0, 0,h]),0,dt,tf )[-1] - propogate(state_guess - np.array([0,0,0,0, 0,h]),0,dt,tf ))[-1] / (2*h))[:3]
+        
+        B = np.vstack((
+            b1,
+            b2,
+            b3
+            )).T 
    
         
         DX = np.matmul(-np.linalg.inv(B),(p1[-1][:3]-pd))# rho1-pd*0)
@@ -195,3 +195,5 @@ if __name__ == "__main__":
         #print(f'p1: {p1[-1][:3]}, pd: {pd}, dp: {rho1-pd}')
         
         residual = np.linalg.norm( p1[-1][:3]- pd) * lstar 
+
+    print('residual: ', residual)
